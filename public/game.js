@@ -10,15 +10,39 @@ class Necro extends Phaser.Scene {
                 this.load.image('red', 'red.png')
                 this.load.image('green', 'green.png')
                 this.load.image('blue', 'blue.png')
+                this.load.image('syringe', 'syringe.png')
         }
 
         create() {
+                const syringe = new Syringe({
+                        scene: this,
+                        x: config.width - config.width / 4,
+                        y: config.height / 4,
+                        texture: 'syringe',
+                        plantTextures: this.plantTextures
+                })
                 const garden = new Garden({
                         scene: this,
                         x: config.width / 4,
                         y: config.height / 4,
+                        outputSyringe: syringe,
                         plantTextures: this.plantTextures
                 })
+        }
+}
+
+class Syringe extends Phaser.GameObjects.Sprite {
+
+        fluid = []
+
+        constructor(config) {
+                super(config.scene, config.x, config.y, config.texture)
+
+        }
+
+        fill(color) {
+                this.fluid.push(color)
+                console.log(this.fluid)
         }
 }
 
@@ -29,6 +53,7 @@ class Garden extends Phaser.GameObjects.Sprite {
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
                 this.plantTextures = config.plantTextures
+                this.outputSyringe = config.outputSyringe
                 this.createBoxes()
                 this.plants = this.createPlants()
                 console.log(this.plants)
@@ -42,10 +67,9 @@ class Garden extends Phaser.GameObjects.Sprite {
                 newPlants.forEach((plant) => {
                         plant.setScale(0.1)
                         plant.setInteractive()
-                        plant.on('pointerdown', () => {
-                                // syringe.fill(plant.texture)
-                                console.log(plant.texture.key)
-                        })
+                        plant.on('pointerdown', () =>
+                                this.outputSyringe.fill(plant.texture.key)
+                        )
                 })
                 return newPlants
         }
