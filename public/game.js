@@ -19,7 +19,7 @@ class Necro extends Phaser.Scene {
         create() {
                 const syringe = new Syringe({
                         scene: this,
-                        x: config.width - config.width / 4 + 25,
+                        x: config.width - config.width / 4 + 50,
                         y: config.height / 2,
                         texture: 'syringe',
                         plantTextures: this.plantTextures
@@ -31,48 +31,55 @@ class Necro extends Phaser.Scene {
                         texture: 'room',
                         outputSyringe: syringe,
                         plantTextures: this.plantTextures
-                }).setScale(0.75)
+                }).setScale(0.8)
 
                 this.add.existing(syringe)
                 this.add.existing(garden)
+
+                this.add.image(
+                        config.width / 4 + 2,
+                        config.height - config.height / 8,
+                        'room'
+                )
         }
 }
 
 class Syringe extends Phaser.GameObjects.Sprite {
 
         needle
-        fluid = []
-        fluidSprites = []
-        corpsePos = {
+        fluid = [] // strings describing the fluid in the syringe
+        fluidSprites = [] // sprites that fill the Syringe
+        corpsePos = { // under the needle
                 x: this.x + 15,
                 y: this.y + 240
         }
-        maxSize = 5
-        sections = [-30, 30, 90, 150, 210]
+        zombieScale = 0.6
 
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
                 this.config = config
-                this.needle = this.scene.add.image(this.corpsePos.x, this.y + 50, 'needle')
+                this.needle = this.scene.add.image(
+                        this.corpsePos.x, this.y + 50, 'needle')
+                this.loadCorpse()
+        }
+
+        loadCorpse() {
                 this.corpse = this.scene.add.image(
-                        this.corpsePos.x, this.corpsePos.y, 'rat'
-                ).setScale(2)
+                        this.corpsePos.x - 25, this.corpsePos.y, 'rat'
+                ).setScale(this.zombieScale)
                 this.corpse.angle = 180
         }
 
         fill(color) {
-                if (this.fluid.length >= this.maxSize) {
+                const sections = [-30, 30, 90, 150, 210]
+                if (this.fluid.length >= sections.length - 1) {
                         this.fire()
                         return
                 }
                 this.fluid.push(color)
-                this.addFluid()
-        }
-
-        addFluid() {
-                const yPos = this.y - this.sections[this.fluid.length - 1]
-                this.fluidSprites.push(this.scene.add.image(this.x + 15, yPos, 'fluid')
-                        .setScale(2, 4).setDepth(100))
+                this.fluidSprites.push(this.scene.add.image(this.x + 15,
+                        this.y - sections[this.fluid.length - 1],
+                        'fluid').setScale(2, 4).setDepth(100))
         }
 
         fire() {
@@ -85,7 +92,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
                         y: this.corpsePos.y,
                         texture: 'rat',
                         fluid: this.fluid
-                }).setScale(2)
+                }).setScale(this.zombieScale)
                 this.scene.add.existing(zombie)
         }
 }
@@ -99,7 +106,21 @@ class Zombie extends Phaser.GameObjects.Sprite {
 
         addEffects(data) {
                 console.log(data)
-                // if (data['yellow']) this.postFx.addBloom()
+                const colorFX = this.preFX.addColorMatrix()
+                if (data['yellow']) colorFX.brightness(1 - data['yellow'] * 0.2, true)
+                if (data['blue']) colorFX.contrast(data['blue'], true)
+                if (data['red']) this.addGlowFX(10 * data['red'])
+        }
+
+        addGlowFX(strength) {
+                this.preFX.setPadding(32);
+                this.scene.tweens.add({
+                        targets: this.preFX.addGlow(),
+                        outerStrength: strength,
+                        yoyo: true,
+                        loop: -1,
+                        ease: 'sine.inout'
+                });
         }
 
         parseInput(fluid) {
@@ -130,7 +151,7 @@ class Garden extends Phaser.GameObjects.Sprite {
                         this.scene.add.image(plant.x, plant.y, plant.texture).setDepth(100)
                 ))
                 newPlants.forEach((plant) => {
-                        plant.setScale(0.1)
+                        plant.setScale(0.075)
                         plant.setInteractive()
                         plant.on('pointerdown', () =>
                                 this.outputSyringe.fill(plant.texture.key)
@@ -141,10 +162,11 @@ class Garden extends Phaser.GameObjects.Sprite {
 
         createBoxes(width = 3, height = 2) {
                 let i = 0
-                let pushRect = (x, y) => {
-                        const boxPos = [this.x / 4 + x * 100, this.y / 4 + y * 100]
-                        this.boxes[x][y] =
-                                new Phaser.Geom.Rectangle(...boxPos, 100, 100);
+                let pushRectCenter = (x, y) => {
+                        this.boxes[x][y] = new Phaser.Geom.Rectangle(
+                                this.x / 4 + 40 + x * 100,
+                                this.y / 4 - 20 + y * 100,
+                                100, 100);
                         this.plants.push({
                                 x: this.boxes[x][y].centerX,
                                 y: this.boxes[x][y].centerY,
@@ -155,7 +177,7 @@ class Garden extends Phaser.GameObjects.Sprite {
                 for (let x = 0; x < width; x++) {
                         this.boxes[x] = [];
                         for (let y = 0; y < height; y++)
-                                pushRect(x, y)
+                                pushRectCenter(x, y)
                 }
         }
 }
@@ -163,7 +185,7 @@ class Garden extends Phaser.GameObjects.Sprite {
 const config = {
         width: 600,
         height: 600,
-        backgroundColor: '#405fa0',
+        backgroundColor: '#979c99',
         type: Phaser.AUTO,
         scene: Necro
 };
