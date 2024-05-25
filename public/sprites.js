@@ -37,17 +37,43 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         fire() {
-                this.fluidSprites.forEach((s) => s.destroy(true))
                 this.needle.y += 100
+                this.clearFluid()
+
                 this.corpse.visible = false
-                const zombie = new Zombie({
+                this.zombie = new Zombie({
                         scene: this.config.scene,
                         x: this.corpsePos.x,
                         y: this.corpsePos.y,
                         texture: 'rat',
                         fluid: this.fluid
                 }).setScale(this.zombieScale)
-                this.scene.add.existing(zombie)
+                this.fluid = []
+                this.scene.add.existing(this.zombie)
+
+                // delay
+
+                this.reset()
+        }
+
+        clearFluid() {
+                var i = 1
+                new Phaser.Core.TimeStep(this.game, {
+                        forceSetTimeOut: true,
+                        target: 3
+                }).start((time, delta) => {
+                        if (i > this.fluidSprites.length) return
+                        this.fluidSprites[
+                                this.fluidSprites.length - i
+                        ].destroy()
+                        i++
+                })
+        }
+
+        reset() {
+                this.zombie.display()
+                this.loadCorpse()
+                this.needle.y -= 100
         }
 }
 
@@ -84,6 +110,11 @@ class Zombie extends Phaser.GameObjects.Sprite {
                         else fluidData[f] = 1
                 })
                 return fluidData
+        }
+
+        display() {
+                this.setScale(0.25)
+                this.setRandomPosition(50, 400, 325, 200)
         }
 }
 

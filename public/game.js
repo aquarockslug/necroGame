@@ -5,10 +5,11 @@ start = function() {
                 type: Phaser.AUTO,
                 width: 600,
                 height: 600,
-                backgroundColor: '#3a5690',
+                backgroundColor: '#bd7028',
                 scene: {
                         preload: preload,
                         create: create,
+                        update: update,
                 }
         };
 
@@ -50,24 +51,24 @@ start = function() {
                         'red', 'yellow', 'blue',
                         'red', 'yellow', 'blue',
                 ]
-                const syringe = new Syringe({
+                this.syringe = new Syringe({
                         scene: this,
                         x: config.width - config.width / 4 + 35,
                         y: config.height / 2,
                         texture: 'syringe',
                         plantTextures: plantTextures
                 }).setScale(2)
-                const garden = new Garden({
+                this.garden = new Garden({
                         scene: this,
                         x: config.width / 3,
                         y: config.height / 4 + 15,
                         texture: 'room',
-                        outputSyringe: syringe,
+                        outputSyringe: this.syringe,
                         plantTextures: plantTextures
                 }).setScale(0.8)
 
-                this.add.existing(syringe)
-                this.add.existing(garden)
+                this.add.existing(this.syringe)
+                this.add.existing(this.garden)
 
                 this.add.image(
                         config.width / 4 + 2,
@@ -77,5 +78,9 @@ start = function() {
 
                 this.cameras.main.postFX.addColorMatrix().brightness(0.9)
         }
+
+        function update() {
+                this.syringe.update()
+        }
 };
-// window.onload = start()
+window.onload = start()
