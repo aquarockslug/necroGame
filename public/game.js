@@ -19,7 +19,7 @@ class Necro extends Phaser.Scene {
         create() {
                 const syringe = new Syringe({
                         scene: this,
-                        x: config.width - config.width / 4 + 50,
+                        x: config.width - config.width / 4 + 35,
                         y: config.height / 2,
                         texture: 'syringe',
                         plantTextures: this.plantTextures
@@ -41,6 +41,8 @@ class Necro extends Phaser.Scene {
                         config.height - config.height / 8,
                         'room'
                 )
+
+                this.cameras.main.postFX.addColorMatrix().brightness(0.9)
         }
 }
 
@@ -164,7 +166,7 @@ class Garden extends Phaser.GameObjects.Sprite {
                 let i = 0
                 let pushRectCenter = (x, y) => {
                         this.boxes[x][y] = new Phaser.Geom.Rectangle(
-                                this.x / 4 + 40 + x * 100,
+                                this.x / 4 + 37 + x * 100,
                                 this.y / 4 - 20 + y * 100,
                                 100, 100);
                         this.plants.push({
@@ -185,7 +187,7 @@ class Garden extends Phaser.GameObjects.Sprite {
 const config = {
         width: 600,
         height: 600,
-        backgroundColor: '#979c99',
+        backgroundColor: '#3a5690',
         type: Phaser.AUTO,
         scene: Necro
 };
