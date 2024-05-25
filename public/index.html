@@ -3,10 +3,26 @@
 
 <head>
         <script src="phaser.min.js "></script>
+        <style>
+                body {
+                        width: 600px;
+                        height: 600px;
+                        background-color: #3a5690
+                }
+
+                button {
+                        width: 200px;
+                        height: 50px;
+                        margin: 200px;
+                }
+        </style>
 </head>
 
 <body>
         <script type="text/javascript" src="game.js"></script>
+        <script type="text/javascript" src="menu.js"></script>
+        <button id="start" onclick="start(); 
+		document.getElementById('start').remove()">Play</button>
 </body>
 
 </html>

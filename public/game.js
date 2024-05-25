@@ -1,51 +1,3 @@
-class Necro extends Phaser.Scene {
-
-        plantTextures = [
-                'red', 'yellow', 'blue',
-                'red', 'yellow', 'blue',
-        ]
-
-        preload() {
-                this.load.image('red', 'red.png')
-                this.load.image('yellow', 'yellow.png')
-                this.load.image('blue', 'blue.png')
-                this.load.image('rat', 'rat.png')
-                this.load.image('syringe', 'machine.png')
-                this.load.image('needle', 'needle.png')
-                this.load.image('room', 'room.png')
-                this.load.image('fluid', 'fluid.png')
-        }
-
-        create() {
-                const syringe = new Syringe({
-                        scene: this,
-                        x: config.width - config.width / 4 + 35,
-                        y: config.height / 2,
-                        texture: 'syringe',
-                        plantTextures: this.plantTextures
-                }).setScale(2)
-                const garden = new Garden({
-                        scene: this,
-                        x: config.width / 3,
-                        y: config.height / 4 + 15,
-                        texture: 'room',
-                        outputSyringe: syringe,
-                        plantTextures: this.plantTextures
-                }).setScale(0.8)
-
-                this.add.existing(syringe)
-                this.add.existing(garden)
-
-                this.add.image(
-                        config.width / 4 + 2,
-                        config.height - config.height / 8,
-                        'room'
-                )
-
-                this.cameras.main.postFX.addColorMatrix().brightness(0.9)
-        }
-}
-
 class Syringe extends Phaser.GameObjects.Sprite {
 
         needle
@@ -183,13 +135,3 @@ class Garden extends Phaser.GameObjects.Sprite {
                 }
         }
 }
-
-const config = {
-        width: 600,
-        height: 600,
-        backgroundColor: '#3a5690',
-        type: Phaser.AUTO,
-        scene: Necro
-};
-
-const game = new Phaser.Game(config);
