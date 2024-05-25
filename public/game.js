@@ -1,137 +1,81 @@
-class Syringe extends Phaser.GameObjects.Sprite {
+var game;
 
-        needle
-        fluid = [] // strings describing the fluid in the syringe
-        fluidSprites = [] // sprites that fill the Syringe
-        corpsePos = { // under the needle
-                x: this.x + 15,
-                y: this.y + 240
-        }
-        zombieScale = 0.6
-
-        constructor(config) {
-                super(config.scene, config.x, config.y, config.texture)
-                this.config = config
-                this.needle = this.scene.add.image(
-                        this.corpsePos.x, this.y + 50, 'needle')
-                this.loadCorpse()
-        }
-
-        loadCorpse() {
-                this.corpse = this.scene.add.image(
-                        this.corpsePos.x - 25, this.corpsePos.y, 'rat'
-                ).setScale(this.zombieScale)
-                this.corpse.angle = 180
-        }
-
-        fill(color) {
-                const sections = [-30, 30, 90, 150, 210]
-                if (this.fluid.length >= sections.length - 1) {
-                        this.fire()
-                        return
+start = function() {
+        var config = {
+                type: Phaser.AUTO,
+                width: 600,
+                height: 600,
+                backgroundColor: '#3a5690',
+                scene: {
+                        preload: preload,
+                        create: create,
                 }
-                this.fluid.push(color)
-                this.fluidSprites.push(this.scene.add.image(this.x + 15,
-                        this.y - sections[this.fluid.length - 1],
-                        'fluid').setScale(2, 4).setDepth(100))
-        }
+        };
 
-        fire() {
-                this.fluidSprites.forEach((s) => s.destroy(true))
-                this.needle.y += 100
-                this.corpse.visible = false
-                const zombie = new Zombie({
-                        scene: this.config.scene,
-                        x: this.corpsePos.x,
-                        y: this.corpsePos.y,
-                        texture: 'rat',
-                        fluid: this.fluid
-                }).setScale(this.zombieScale)
-                this.scene.add.existing(zombie)
-        }
-}
+        game = new Phaser.Game(config);
 
-class Zombie extends Phaser.GameObjects.Sprite {
-        constructor(config) {
-                super(config.scene, config.x, config.y, config.texture)
-                this.inputData = this.parseInput(config.fluid)
-                this.addEffects(this.inputData)
-        }
+        function preload() {
+                // Display loading progress
+                var progressBar = this.add.graphics();
+                var progressBox = this.add.graphics();
+                progressBox.fillStyle(0x222222, 0.8);
+                progressBox.fillRect(config.width / 4, config.height / 2, 320, 50);
 
-        addEffects(data) {
-                console.log(data)
-                const colorFX = this.preFX.addColorMatrix()
-                if (data['yellow']) colorFX.brightness(1 - data['yellow'] * 0.2, true)
-                if (data['blue']) colorFX.contrast(data['blue'], true)
-                if (data['red']) this.addGlowFX(10 * data['red'])
-        }
-
-        addGlowFX(strength) {
-                this.preFX.setPadding(32);
-                this.scene.tweens.add({
-                        targets: this.preFX.addGlow(),
-                        outerStrength: strength,
-                        yoyo: true,
-                        loop: -1,
-                        ease: 'sine.inout'
+                // Update loading progress
+                this.load.on('progress', function(value) {
+                        progressBar.clear();
+                        progressBar.fillStyle(0xffffff, 1);
+                        progressBar.fillRect(config.width / 4 + 10,
+                                config.height / 2 + 10, 300 * value, 30);
                 });
+
+                // Remove loading progress when complete
+                this.load.on('complete', function() {
+                        progressBar.destroy();
+                        progressBox.destroy();
+                });
+
+                this.load.image('red', 'red.png')
+                this.load.image('yellow', 'yellow.png')
+                this.load.image('blue', 'blue.png')
+                this.load.image('rat', 'rat.png')
+                this.load.image('syringe', 'machine.png')
+                this.load.image('needle', 'needle.png')
+                this.load.image('room', 'room.png')
+                this.load.image('fluid', 'fluid.png')
         }
 
-        parseInput(fluid) {
-                const fluidData = {}
-                fluid.forEach((f) => {
-                        if (f in fluidData) fluidData[f] += 1
-                        else fluidData[f] = 1
-                })
-                return fluidData
-        }
-}
+        function create() {
+                const plantTextures = [
+                        'red', 'yellow', 'blue',
+                        'red', 'yellow', 'blue',
+                ]
+                const syringe = new Syringe({
+                        scene: this,
+                        x: config.width - config.width / 4 + 35,
+                        y: config.height / 2,
+                        texture: 'syringe',
+                        plantTextures: plantTextures
+                }).setScale(2)
+                const garden = new Garden({
+                        scene: this,
+                        x: config.width / 3,
+                        y: config.height / 4 + 15,
+                        texture: 'room',
+                        outputSyringe: syringe,
+                        plantTextures: plantTextures
+                }).setScale(0.8)
 
-class Garden extends Phaser.GameObjects.Sprite {
-        boxes = []
-        plants = []
+                this.add.existing(syringe)
+                this.add.existing(garden)
 
-        constructor(config) {
-                super(config.scene, config.x, config.y, config.texture)
-                this.plantTextures = config.plantTextures
-                this.outputSyringe = config.outputSyringe
-                this.plants = this.createPlants()
-        }
+                this.add.image(
+                        config.width / 4 + 2,
+                        config.height - config.height / 8,
+                        'room'
+                )
 
-        createPlants() {
-                this.createBoxes()
-                let newPlants = []
-                this.plants.forEach((plant) => newPlants.push(
-                        this.scene.add.image(plant.x, plant.y, plant.texture).setDepth(100)
-                ))
-                newPlants.forEach((plant) => {
-                        plant.setScale(0.075)
-                        plant.setInteractive()
-                        plant.on('pointerdown', () =>
-                                this.outputSyringe.fill(plant.texture.key)
-                        )
-                })
-                return newPlants
+                this.cameras.main.postFX.addColorMatrix().brightness(0.9)
         }
-
-        createBoxes(width = 3, height = 2) {
-                let i = 0
-                let pushRectCenter = (x, y) => {
-                        this.boxes[x][y] = new Phaser.Geom.Rectangle(
-                                this.x / 4 + 37 + x * 100,
-                                this.y / 4 - 20 + y * 100,
-                                100, 100);
-                        this.plants.push({
-                                x: this.boxes[x][y].centerX,
-                                y: this.boxes[x][y].centerY,
-                                texture: this.plantTextures[i]
-                        })
-                        i++
-                }
-                for (let x = 0; x < width; x++) {
-                        this.boxes[x] = [];
-                        for (let y = 0; y < height; y++)
-                                pushRectCenter(x, y)
-                }
-        }
-}
+};
+// window.onload = start()
