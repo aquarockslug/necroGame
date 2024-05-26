@@ -8,6 +8,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 y: this.y + 240
         }
         zombieScale = 0.6
+        ready = true
 
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
@@ -37,6 +38,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         async fire() {
+                this.ready = false
                 this.needle.y += 100
                 this.zombie = this.createZombie()
                 await this.drainFluid()
@@ -72,21 +74,25 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 if (this.zombie) this.zombie.display()
                 this.needle.y -= 100
                 this.loadCorpse()
+                this.ready = true
         }
 }
 
 class Zombie extends Phaser.GameObjects.Sprite {
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
-                this.inputData = this.parseInput(config.fluid)
+                this.inputData = this.parseInputData(config.fluid)
                 this.addEffects(this.inputData)
         }
 
         addEffects(data) {
                 console.log(data)
+                // yellow brightens, blue darkens, red glows
+                if (!data['yellow']) data['yellow'] = 0
+                if (!data['blue']) data['blue'] = 0
                 const colorFX = this.preFX.addColorMatrix()
-                if (data['yellow']) colorFX.brightness(1 - data['yellow'] * 0.2, true)
-                if (data['blue']) colorFX.contrast(data['blue'], true)
+                colorFX.brightness(
+                        1 + data['yellow'] * 0.2 - data['blue'] * 0.2, true)
                 if (data['red']) this.addGlowFX(10 * data['red'])
         }
 
@@ -101,7 +107,7 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 });
         }
 
-        parseInput(fluid) {
+        parseInputData(fluid) {
                 const fluidData = {}
                 fluid.forEach((f) => {
                         if (f in fluidData) fluidData[f] += 1
@@ -139,8 +145,8 @@ class Garden extends Phaser.GameObjects.Sprite {
                         const fx = plant.preFX.addColorMatrix()
                         plant.on('pointerover', () => fx.brightness(1.5))
                         plant.on('pointerout', () => fx.brightness(1))
-                        plant.on('pointerdown', () =>
-                                this.outputSyringe.fill(plant.texture.key)
+                        plant.on('pointerdown', () => this.outputSyringe.ready ?
+                                this.outputSyringe.fill(plant.texture.key) : null
                         )
                 })
                 return newPlants
