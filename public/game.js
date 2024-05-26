@@ -42,6 +42,7 @@ start = function() {
                 this.load.image('blue', 'blue.png')
                 this.load.image('green', 'green.png')
                 this.load.image('orange', 'orange.png')
+                this.load.image('purple', 'purple.png')
                 this.load.image('rat', 'rat.png')
                 this.load.image('syringe', 'machine.png')
                 this.load.image('needle', 'needle.png')
@@ -52,7 +53,7 @@ start = function() {
         function create() {
                 const plantTextures = [
                         'red', 'orange', 'blue',
-                        'orange', 'yellow', 'green',
+                        'purple', 'yellow', 'green',
                 ]
                 this.syringe = new Syringe({
                         scene: this,

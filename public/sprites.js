@@ -39,7 +39,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
 
         async fire() {
                 this.ready = false
-                this.needle.y += 100
+                this.needle.y += 120
                 this.zombie = this.createZombie()
                 await this.drainFluid()
                 this.zombie.visible = true
@@ -70,7 +70,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         async reset() {
-                this.needle.y -= 100
+                this.needle.y -= 120
                 await new Promise(r => setTimeout(r, 1000))
                 if (this.zombie) this.zombie.display()
                 await new Promise(r => setTimeout(r, 500))
@@ -98,14 +98,18 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 const colorFX = this.preFX.addColorMatrix()
                 colorFX.brightness(1 + data['yellow'] * 0.2 - data['red'] * 0.2, true)
                 this.setScale(0.8 + data['green'] * 0.05 - data['blue'] * 0.05)
-                if (data['orange']) this.addGlowFX(10 * data['orange'])
+                if (data['orange']) this.addGlowFX(10 * data['orange'], 'black')
+                if (data['purple']) this.addGlowFX(10 * data['purple'], 'white')
         }
 
-        addGlowFX(strength) {
+        addGlowFX(strength, color) {
                 if (!strength) return
                 this.preFX.setPadding(32);
+                if (color == 'white') {
+                        var glow = this.preFX.addGlow()
+                } else var glow = this.preFX.addGlow(color)
                 this.scene.tweens.add({
-                        targets: this.preFX.addGlow('red'),
+                        targets: glow,
                         outerStrength: strength,
                         yoyo: true,
                         loop: -1,
@@ -124,10 +128,11 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 if (!data['red']) data['red'] = 0
                 if (!data['green']) data['green'] = 0
                 if (!data['orange']) data['orange'] = 0
+                if (!data['purple']) data['purple'] = 0
 
                 if (data['yellow'] == data['red'] &&
                         data['green'] == data['blue'] &&
-                        data['orange'] == 0)
+                        data['orange'] == 0 && data['purple'] == 0)
                         this.healthy = true
 
                 return data
