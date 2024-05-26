@@ -51,9 +51,16 @@ start = function() {
 
                 this.load.audio('fire', 'fire.mp3')
                 this.load.audio('forage', 'plant.mp3')
+                this.load.audio('music', 'harp.mp3')
         }
 
         function create() {
+                this.music = this.sound.add('music', {
+                        volume: 0.2,
+                        loop: true
+                })
+
+                this.music.play()
                 const plantTextures = [
                         'red', 'orange', 'blue',
                         'purple', 'yellow', 'green',
