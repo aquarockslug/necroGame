@@ -44,13 +44,13 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 await this.drainFluid()
                 this.zombie.visible = true
                 this.corpse.visible = false
-                await new Promise(r => setTimeout(r, 500))
+                await new Promise(r => setTimeout(r, 1000))
                 this.reset()
         }
 
-        async drainFluid() {
+        async drainFluid(speed = 100) {
                 for (const sprite of this.fluidSprites.reverse()) {
-                        await new Promise(r => setTimeout(r, 250))
+                        await new Promise(r => setTimeout(r, speed))
                         sprite.destroy()
                 }
                 this.fluidSprites = []
@@ -86,17 +86,14 @@ class Zombie extends Phaser.GameObjects.Sprite {
         }
 
         addEffects(data) {
-                console.log(data)
-                // yellow brightens, blue darkens, red glows
-                if (!data['yellow']) data['yellow'] = 0
-                if (!data['blue']) data['blue'] = 0
+                // yellow brightens, red darkens, blue glows, green flashes
                 const colorFX = this.preFX.addColorMatrix()
-                colorFX.brightness(
-                        1 + data['yellow'] * 0.2 - data['blue'] * 0.2, true)
-                if (data['red']) this.addGlowFX(10 * data['red'])
+                colorFX.brightness(1 + data['yellow'] * 0.2 - data['red'] * 0.2, true)
+                if (data['blue']) this.addGlowFX(10 * data['blue'] - 10 * data['green'])
         }
 
         addGlowFX(strength) {
+                if (!strength) return
                 this.preFX.setPadding(32);
                 this.scene.tweens.add({
                         targets: this.preFX.addGlow(),
@@ -108,12 +105,16 @@ class Zombie extends Phaser.GameObjects.Sprite {
         }
 
         parseInputData(fluid) {
-                const fluidData = {}
+                const data = {}
                 fluid.forEach((f) => {
-                        if (f in fluidData) fluidData[f] += 1
-                        else fluidData[f] = 1
+                        if (f in data) data[f] += 1
+                        else data[f] = 1
                 })
-                return fluidData
+                if (!data['yellow']) data['yellow'] = 0
+                if (!data['blue']) data['blue'] = 0
+                if (!data['red']) data['red'] = 0
+                if (!data['green']) data['green'] = 0
+                return data
         }
 
         display() {
