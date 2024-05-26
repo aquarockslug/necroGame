@@ -16,6 +16,9 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 this.needle = this.scene.add.image(
                         this.corpsePos.x, this.y + 50, 'needle')
                 this.loadCorpse()
+                this.fireSound = this.scene.sound.add('fire', {
+                        volume: 0.2,
+                })
         }
 
         loadCorpse() {
@@ -38,6 +41,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         async fire() {
+                this.fireSound.play()
                 this.ready = false
                 this.needle.y += 120
                 this.zombie = this.createZombie()
@@ -153,6 +157,9 @@ class Garden extends Phaser.GameObjects.Sprite {
                 this.plantTextures = config.plantTextures
                 this.outputSyringe = config.outputSyringe
                 this.plants = this.createPlants()
+                this.forageSound = this.scene.sound.add('forage', {
+                        volume: 0.2,
+                })
         }
 
         createPlants() {
@@ -167,9 +174,10 @@ class Garden extends Phaser.GameObjects.Sprite {
                         const fx = plant.preFX.addColorMatrix()
                         plant.on('pointerover', () => fx.brightness(1.5))
                         plant.on('pointerout', () => fx.brightness(1))
-                        plant.on('pointerdown', () => this.outputSyringe.ready ?
-                                this.outputSyringe.fill(plant.texture.key) : null
-                        )
+                        plant.on('pointerdown', () => {
+                                this.forageSound.play()
+                                this.outputSyringe.ready ? this.outputSyringe.fill(plant.texture.key) : null
+                        })
                 })
                 return newPlants
         }

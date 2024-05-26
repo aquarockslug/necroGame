@@ -48,6 +48,9 @@ start = function() {
                 this.load.image('needle', 'needle.png')
                 this.load.image('room', 'room.png')
                 this.load.image('fluid', 'fluid.png')
+
+                this.load.audio('fire', 'fire.mp3')
+                this.load.audio('forage', 'plant.mp3')
         }
 
         function create() {
