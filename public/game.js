@@ -1,5 +1,6 @@
 var game;
 
+
 start = function() {
         var config = {
                 type: Phaser.AUTO,
@@ -39,6 +40,8 @@ start = function() {
                 this.load.image('red', 'red.png')
                 this.load.image('yellow', 'yellow.png')
                 this.load.image('blue', 'blue.png')
+                this.load.image('green', 'green.png')
+                this.load.image('orange', 'orange.png')
                 this.load.image('rat', 'rat.png')
                 this.load.image('syringe', 'machine.png')
                 this.load.image('needle', 'needle.png')
@@ -48,8 +51,8 @@ start = function() {
 
         function create() {
                 const plantTextures = [
-                        'red', 'yellow', 'blue',
-                        'red', 'yellow', 'blue',
+                        'red', 'orange', 'blue',
+                        'orange', 'yellow', 'green',
                 ]
                 this.syringe = new Syringe({
                         scene: this,
@@ -77,12 +80,21 @@ start = function() {
                 )
 
                 this.cameras.main.postFX.addColorMatrix().brightness(0.9)
-		
 
+                this.endGame = () => {
+                        this.add.text(
+                                config.width / 4,
+                                config.height / 2,
+                                'Success!', {
+                                        fontFamily: 'serif',
+                                        fontSize: 64
+                                }
+                        )
+                        this.scene.pause()
+                }
         }
 
         function update() {
-                this.syringe.update()
+                if (this.syringe.hasHealthy()) this.endGame()
         }
 };
-// window.onload = start()

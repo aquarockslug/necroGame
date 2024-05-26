@@ -4,10 +4,10 @@ class Syringe extends Phaser.GameObjects.Sprite {
         fluid = [] // strings describing the fluid in the syringe
         fluidSprites = [] // sprites that fill the Syringe
         corpsePos = { // under the needle
-                x: this.x + 15,
+                x: this.x + 20,
                 y: this.y + 240
         }
-        zombieScale = 0.6
+        zombieScale = 0.8
         ready = true
 
         constructor(config) {
@@ -21,7 +21,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
         loadCorpse() {
                 if (!this.corpse) {
                         this.corpse = this.scene.add.image(
-                                this.corpsePos.x - 25, this.corpsePos.y, 'rat'
+                                this.corpsePos.x - 50, this.corpsePos.y, 'rat'
                         ).setScale(this.zombieScale)
                         this.corpse.angle = 180
                 }
@@ -29,11 +29,11 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         async fill(color) {
-                const sections = [-30, 30, 90, 150, 210]
+                const sections = [-30, 15, 60, 105, 150, 195]
                 this.fluid.push(color)
                 this.fluidSprites.push(this.scene.add.image(this.x + 15,
                         this.y - sections[this.fluid.length - 1],
-                        'fluid').setScale(2, 4).setDepth(100))
+                        'fluid').setScale(2, 3).setDepth(100))
                 if (this.fluid.length >= sections.length) this.fire()
         }
 
@@ -44,7 +44,6 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 await this.drainFluid()
                 this.zombie.visible = true
                 this.corpse.visible = false
-                await new Promise(r => setTimeout(r, 1000))
                 this.reset()
         }
 
@@ -59,22 +58,31 @@ class Syringe extends Phaser.GameObjects.Sprite {
         createZombie(visible = false) {
                 const zombie = new Zombie({
                         scene: this.config.scene,
-                        x: this.corpsePos.x,
-                        y: this.corpsePos.y,
+                        x: this.corpsePos.x + 5,
+                        y: this.corpsePos.y - 5,
                         texture: 'rat',
                         fluid: this.fluid,
-                }).setScale(this.zombieScale)
+                })
                 zombie.visible = visible
                 this.fluid = []
                 this.scene.add.existing(zombie)
                 return zombie
         }
 
-        reset() {
-                if (this.zombie) this.zombie.display()
+        async reset() {
                 this.needle.y -= 100
+                await new Promise(r => setTimeout(r, 1000))
+                if (this.zombie) this.zombie.display()
+                await new Promise(r => setTimeout(r, 500))
                 this.loadCorpse()
                 this.ready = true
+        }
+
+        hasHealthy() {
+                if (this.zombie)
+                        if (this.zombie.healthy)
+                                return true
+                return false
         }
 }
 
@@ -89,14 +97,15 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 // yellow brightens, red darkens, blue glows, green flashes
                 const colorFX = this.preFX.addColorMatrix()
                 colorFX.brightness(1 + data['yellow'] * 0.2 - data['red'] * 0.2, true)
-                if (data['blue']) this.addGlowFX(10 * data['blue'] - 10 * data['green'])
+                this.setScale(0.8 + data['green'] * 0.05 - data['blue'] * 0.05)
+                if (data['orange']) this.addGlowFX(10 * data['orange'])
         }
 
         addGlowFX(strength) {
                 if (!strength) return
                 this.preFX.setPadding(32);
                 this.scene.tweens.add({
-                        targets: this.preFX.addGlow(),
+                        targets: this.preFX.addGlow('red'),
                         outerStrength: strength,
                         yoyo: true,
                         loop: -1,
@@ -114,11 +123,18 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 if (!data['blue']) data['blue'] = 0
                 if (!data['red']) data['red'] = 0
                 if (!data['green']) data['green'] = 0
+                if (!data['orange']) data['orange'] = 0
+
+                if (data['yellow'] == data['red'] &&
+                        data['green'] == data['blue'] &&
+                        data['orange'] == 0)
+                        this.healthy = true
+
                 return data
         }
 
         display() {
-                this.setScale(0.25)
+                this.setScale(this.scale / 4)
                 this.setRandomPosition(50, 400, 325, 175)
         }
 }
