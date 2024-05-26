@@ -18,62 +18,60 @@ class Syringe extends Phaser.GameObjects.Sprite {
         }
 
         loadCorpse() {
-                this.corpse = this.scene.add.image(
-                        this.corpsePos.x - 25, this.corpsePos.y, 'rat'
-                ).setScale(this.zombieScale)
-                this.corpse.angle = 180
+                if (!this.corpse) {
+                        this.corpse = this.scene.add.image(
+                                this.corpsePos.x - 25, this.corpsePos.y, 'rat'
+                        ).setScale(this.zombieScale)
+                        this.corpse.angle = 180
+                }
+                this.corpse.visible = true
         }
 
-        fill(color) {
+        async fill(color) {
                 const sections = [-30, 30, 90, 150, 210]
-                if (this.fluid.length >= sections.length - 1) {
-                        this.fire()
-                        return
-                }
                 this.fluid.push(color)
                 this.fluidSprites.push(this.scene.add.image(this.x + 15,
                         this.y - sections[this.fluid.length - 1],
                         'fluid').setScale(2, 4).setDepth(100))
+                if (this.fluid.length >= sections.length) this.fire()
         }
 
-        fire() {
+        async fire() {
                 this.needle.y += 100
-                this.clearFluid()
-
+                this.zombie = this.createZombie()
+                await this.drainFluid()
+                this.zombie.visible = true
                 this.corpse.visible = false
-                this.zombie = new Zombie({
+                await new Promise(r => setTimeout(r, 500))
+                this.reset()
+        }
+
+        async drainFluid() {
+                for (const sprite of this.fluidSprites.reverse()) {
+                        await new Promise(r => setTimeout(r, 250))
+                        sprite.destroy()
+                }
+                this.fluidSprites = []
+        }
+
+        createZombie(visible = false) {
+                const zombie = new Zombie({
                         scene: this.config.scene,
                         x: this.corpsePos.x,
                         y: this.corpsePos.y,
                         texture: 'rat',
-                        fluid: this.fluid
+                        fluid: this.fluid,
                 }).setScale(this.zombieScale)
+                zombie.visible = visible
                 this.fluid = []
-                this.scene.add.existing(this.zombie)
-
-                // delay
-
-                this.reset()
-        }
-
-        clearFluid() {
-                var i = 1
-                new Phaser.Core.TimeStep(this.game, {
-                        forceSetTimeOut: true,
-                        target: 3
-                }).start((time, delta) => {
-                        if (i > this.fluidSprites.length) return
-                        this.fluidSprites[
-                                this.fluidSprites.length - i
-                        ].destroy()
-                        i++
-                })
+                this.scene.add.existing(zombie)
+                return zombie
         }
 
         reset() {
-                this.zombie.display()
-                this.loadCorpse()
+                if (this.zombie) this.zombie.display()
                 this.needle.y -= 100
+                this.loadCorpse()
         }
 }
 
@@ -114,7 +112,7 @@ class Zombie extends Phaser.GameObjects.Sprite {
 
         display() {
                 this.setScale(0.25)
-                this.setRandomPosition(50, 400, 325, 200)
+                this.setRandomPosition(50, 400, 325, 175)
         }
 }
 
@@ -145,8 +143,7 @@ class Garden extends Phaser.GameObjects.Sprite {
                 return newPlants
         }
 
-        createBoxes(width = 3, height = 2) {
-                let i = 0
+        createBoxes(width = 3, height = 2, i = 0) {
                 let pushRectCenter = (x, y) => {
                         this.boxes[x][y] = new Phaser.Geom.Rectangle(
                                 this.x / 4 + 37 + x * 100,
@@ -155,9 +152,8 @@ class Garden extends Phaser.GameObjects.Sprite {
                         this.plants.push({
                                 x: this.boxes[x][y].centerX,
                                 y: this.boxes[x][y].centerY,
-                                texture: this.plantTextures[i]
+                                texture: this.plantTextures[i++]
                         })
-                        i++
                 }
                 for (let x = 0; x < width; x++) {
                         this.boxes[x] = [];

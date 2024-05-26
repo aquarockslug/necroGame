@@ -77,10 +77,12 @@ start = function() {
                 )
 
                 this.cameras.main.postFX.addColorMatrix().brightness(0.9)
+		
+
         }
 
         function update() {
                 this.syringe.update()
         }
 };
-window.onload = start()
+// window.onload = start()
