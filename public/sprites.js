@@ -136,6 +136,9 @@ class Garden extends Phaser.GameObjects.Sprite {
                 newPlants.forEach((plant) => {
                         plant.setScale(0.075)
                         plant.setInteractive()
+                        const fx = plant.preFX.addColorMatrix()
+                        plant.on('pointerover', () => fx.brightness(1.5))
+                        plant.on('pointerout', () => fx.brightness(1))
                         plant.on('pointerdown', () =>
                                 this.outputSyringe.fill(plant.texture.key)
                         )
