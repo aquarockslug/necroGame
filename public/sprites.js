@@ -2,13 +2,14 @@ class Syringe extends Phaser.GameObjects.Sprite {
 
         needle
         fluid = [] // strings describing the fluid in the syringe
-        fluidSprites = [] // sprites that fill the Syringe
-        corpsePos = { // under the needle
+        fluidSprites = [] // sprites that fill the Syringe representing fluid
+        corpsePos = { // position under the needle
                 x: this.x + 20,
                 y: this.y + 240
         }
         zombieScale = 0.8
-        ready = true
+        ready = true // if syringe is ready to recieve liquid
+        sicknessPuzzle = ["red", "red", "red", "green", "green", "green"]
 
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
@@ -19,16 +20,6 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 this.fireSound = this.scene.sound.add('fire', {
                         volume: 0.2,
                 })
-        }
-
-        loadCorpse() {
-                if (!this.corpse) {
-                        this.corpse = this.scene.add.image(
-                                this.corpsePos.x - 50, this.corpsePos.y, 'rat'
-                        ).setScale(this.zombieScale)
-                        this.corpse.angle = 180
-                }
-                this.corpse.visible = true
         }
 
         async fill(color) {
@@ -59,6 +50,11 @@ class Syringe extends Phaser.GameObjects.Sprite {
                 this.fluidSprites = []
         }
 
+        loadCorpse() {
+                this.corpse = this.createZombie(true).setScale(this.zombieScale)
+                this.corpse.angle = 180
+        }
+
         createZombie(visible = false) {
                 const zombie = new Zombie({
                         scene: this.config.scene,
@@ -66,6 +62,7 @@ class Syringe extends Phaser.GameObjects.Sprite {
                         y: this.corpsePos.y - 5,
                         texture: 'rat',
                         fluid: this.fluid,
+                        sickness: this.sicknessPuzzle
                 })
                 zombie.visible = visible
                 this.fluid = []
@@ -93,15 +90,34 @@ class Syringe extends Phaser.GameObjects.Sprite {
 class Zombie extends Phaser.GameObjects.Sprite {
         constructor(config) {
                 super(config.scene, config.x, config.y, config.texture)
+                this.sickness = this.parseInputData(config.sickness)
+                if (!config.fluid) {
+                        this.addEffects(this.sickness)
+                        return
+                }
+
                 this.inputData = this.parseInputData(config.fluid)
-                this.addEffects(this.inputData)
+                this.finalEffect = {
+                        red: this.sickness['red'] + this.inputData['red'],
+                        yellow: this.sickness['yellow'] + this.inputData['yellow'],
+                        orange: this.sickness['orange'] + this.inputData['orange'],
+                        green: this.sickness['green'] + this.inputData['green'],
+                        blue: this.sickness['blue'] + this.inputData['blue'],
+                        purple: this.sickness['purple'] + this.inputData['purple']
+                }
+                console.log(this.finalEffect)
+                this.addEffects(this.finalEffect)
+
+                if (this.finalEffect.red == 3 && this.finalEffect.yellow == 3 &&
+                        this.finalEffect.green == 3 && this.finalEffect.blue == 3)
+                        this.healthy = true
         }
 
         addEffects(data) {
                 // yellow brightens, red darkens, blue glows, green flashes
                 const colorFX = this.preFX.addColorMatrix()
                 colorFX.brightness(1 + data['yellow'] * 0.2 - data['red'] * 0.2, true)
-                this.setScale(0.8 + data['green'] * 0.05 - data['blue'] * 0.05)
+                this.setScale(0.8 + data['green'] * 0.1 - data['blue'] * 0.1, 0.8)
                 if (data['orange']) this.addGlowFX(10 * data['orange'], 'black')
                 if (data['purple']) this.addGlowFX(10 * data['purple'], 'white')
         }
@@ -133,11 +149,6 @@ class Zombie extends Phaser.GameObjects.Sprite {
                 if (!data['green']) data['green'] = 0
                 if (!data['orange']) data['orange'] = 0
                 if (!data['purple']) data['purple'] = 0
-
-                if (data['yellow'] == data['red'] &&
-                        data['green'] == data['blue'] &&
-                        data['orange'] == 0 && data['purple'] == 0)
-                        this.healthy = true
 
                 return data
         }

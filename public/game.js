@@ -1,6 +1,5 @@
 var game;
 
-
 start = function() {
         var config = {
                 type: Phaser.AUTO,
